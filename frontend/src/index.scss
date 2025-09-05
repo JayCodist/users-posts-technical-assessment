@@ -30,6 +30,43 @@ body {
   position: relative;
   width: 80px;
   height: 80px;
+  &.small {
+    width: 20px;
+    height: 20px;
+
+    div {
+      top: 8.33px;
+      width: 3.33px;
+      height: 3.33px;
+    }
+
+    div:nth-child(1) {
+      left: 2px;
+    }
+    div:nth-child(2) {
+      left: 2px;
+    }
+    div:nth-child(3) {
+      left: 8px;
+    }
+    div:nth-child(4) {
+      left: 14px;
+    }
+
+    @keyframes lds-ellipsis2-small {
+      0% {
+        transform: translate(0, 0);
+      }
+      100% {
+        transform: translate(6px, 0);
+      }
+    }
+
+    div:nth-child(2),
+    div:nth-child(3) {
+      animation-name: lds-ellipsis2-small;
+    }
+  }
 }
 .lds-ellipsis div {
   position: absolute;
