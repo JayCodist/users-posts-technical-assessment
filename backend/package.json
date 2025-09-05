@@ -11,7 +11,7 @@
     "sqlite3": "^5.1.7"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp data.db dist/data.db",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts"
   },
