@@ -1,5 +1,6 @@
-import { Fragment, useState, useEffect, useMemo, ReactNode } from "react";
+import React, { Fragment, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import { getPrefilledPaginationControls } from "./Table.utils";
+import LoadingIndicator from "../ui/LoadingIndicator";
 
 export interface Column<T = unknown> {
   title: string;
@@ -47,7 +48,7 @@ const Table = <T = unknown,>(props: TableProps<T>): ReactNode => {
     onRowClick,
   } = props;
 
-  const columns: Column[] = [..._columns].filter(Boolean) as Column[];
+  const columns: Column[] = useMemo(() => [..._columns].filter(Boolean) as Column[], [_columns]);
 
   const dataSource: T[] = useMemo(() => {
     const pageSize = pagination?.pageSize || Infinity;
@@ -59,17 +60,17 @@ const Table = <T = unknown,>(props: TableProps<T>): ReactNode => {
 
   const { pageSize = Infinity, total = dataSource.length, pageNumber = 1 } = pagination || {};
 
-  const handlePageControlClick: (pageNumber: number) => void = (_page) => {
+  const handlePageControlClick = useCallback((_page: number) => {
     if (_page >= 1 && _page <= pageCount) onPageChange(_page);
-  };
+  }, [pageCount, onPageChange]);
 
   useEffect(() => {
     setPageCount(Math.ceil(total / pageSize));
   }, [total, pageSize]);
 
-  const getCellRender: (row: T, col: Column<T>, index: number) => ReactNode = (row, col, i) => {
-    return col.render ? col.render(row[col.dataIndex], row, i) : String(row[col.dataIndex]);
-  };
+  const getCellRender = useCallback((row: T, col: Column<T>, index: number): ReactNode => {
+    return col.render ? col.render(row[col.dataIndex], row, index) : String(row[col.dataIndex]);
+  }, []);
 
   const paginationControls = useMemo(() => {
     return getPrefilledPaginationControls(pageNumber, pageCount);
@@ -121,12 +122,7 @@ const Table = <T = unknown,>(props: TableProps<T>): ReactNode => {
 
         {loading && (
         <div className="absolute top-0 left-0 w-full h-full z-10 bg-white bg-opacity-80 flex justify-center items-center">
-          <div className="lds-ellipsis">
-            <div />
-            <div />
-            <div />
-            <div />
-          </div>
+          <LoadingIndicator />
         </div>
       )}
       </div>
@@ -174,4 +170,4 @@ const Table = <T = unknown,>(props: TableProps<T>): ReactNode => {
   );
 };
 
-export default Table;
+export default React.memo(Table) as typeof Table;

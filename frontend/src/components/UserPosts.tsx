@@ -1,11 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback, ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser, useUserPosts, useDeletePost } from "../hooks/useUsers";
 import { Post } from "../types";
 import ErrorMessage from "./ui/ErrorMessage";
 import NewPostModal from "./NewPostModal";
-import Modal from "./ui/Modal";
+import PostViewModal from "./PostViewModal";
+import DeletePostModal from "./DeletePostModal";
+import PostCard from "./PostCard";
+import BackButton from "./ui/BackButton";
+import LoadingIndicator from "./ui/LoadingIndicator";
 import { useToast } from "../contexts/ToastContext";
+
+// Local PageLayout component for UserPosts
+interface PageLayoutProps {
+  children: ReactNode;
+  showBackButton?: boolean;
+  onBackClick?: () => void;
+  className?: string;
+}
+
+const PageLayout: React.FC<PageLayoutProps> = ({
+  children,
+  showBackButton = true,
+  onBackClick,
+  className = "container mx-auto lg:px-32 px-4 py-8",
+}) => {
+  return (
+    <div className={className}>
+      <div className="bg-white rounded-lg shadow-sm">
+        {showBackButton && onBackClick && (
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex flex-col">
+              <BackButton title="Back to Users" onClick={onBackClick} />
+            </div>
+          </div>
+        )}
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const UserPosts: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -23,20 +57,23 @@ const UserPosts: React.FC = () => {
   const error = userError || postsError;
   const isError = !!userError || postsIsError;
 
-  const handleBackToUsers = () => {
+  const handleBackToUsers = useCallback(() => {
     // Use browser back if there's history, otherwise go to home
     if (window.history.length > 1) {
       navigate(-1);
     } else {
       navigate("/");
     }
-  };
+  }, [navigate]);
 
-  const handleDeletePost = (post: Post) => {
-    setPostToDelete(post);
-  };
+  const handleDeletePost = useCallback(
+    (post: Post) => {
+      setPostToDelete(post);
+    },
+    [setPostToDelete]
+  );
 
-  const confirmDeletePost = async () => {
+  const confirmDeletePost = useCallback(async () => {
     if (!postToDelete) return;
 
     try {
@@ -47,81 +84,53 @@ const UserPosts: React.FC = () => {
       showError("Failed to delete post. Please try again.");
       console.error("Failed to delete post:", error);
     }
-  };
+  }, [postToDelete, deletePostMutation, userId, showSuccess, showError]);
 
-  const cancelDeletePost = () => {
+  const cancelDeletePost = useCallback(() => {
     setPostToDelete(null);
-  };
+  }, [setPostToDelete]);
 
-  const handleNewPost = () => {
+  const handleNewPost = useCallback(() => {
     setIsModalOpen(true);
-  };
+  }, [setIsModalOpen]);
 
-  const handlePostClick = (post: Post) => {
+  const handlePostClick = useCallback((post: Post) => {
     setSelectedPost(post);
-  };
+  }, []);
 
   const handleClosePostModal = () => {
     setSelectedPost(null);
   };
 
+  const postsArray = useMemo(() => posts || [], [posts]);
+
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col">
-              <button onClick={handleBackToUsers} className="hover:bg-gray-100 rounded-md p-1 text-gray-500 transition-colors duration-150 self-start">
-                ← Back to Users
-              </button>
-            </div>
-          </div>
-          <div className="p-20 flex justify-center items-center">
-            <div className="lds-ellipsis">
-              <div />
-              <div />
-              <div />
-              <div />
-            </div>
-          </div>
+      <PageLayout onBackClick={handleBackToUsers} className="container mx-auto px-4 py-8">
+        <div className="p-20 flex justify-center items-center">
+          <LoadingIndicator />
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (isError) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col">
-              <button onClick={handleBackToUsers} className="hover:bg-gray-100 rounded-md p-1 text-gray-500 transition-colors duration-150 self-start">
-                ← Back to Users
-              </button>
-            </div>
-          </div>
-          <div className="p-6">
-            <ErrorMessage message={error?.message || "Failed to load posts"} onRetry={() => window.location.reload()} />
-          </div>
+      <PageLayout onBackClick={handleBackToUsers} className="container mx-auto px-4 py-8">
+        <div className="p-6">
+          <ErrorMessage message={error?.message || "Failed to load posts"} onRetry={() => window.location.reload()} />
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
-  const postsArray = posts || [];
-
   return (
-    <div className="container mx-auto lg:px-32 px-4 py-8">
-      <div className="bg-white rounded-lg shadow-sm">
-        {/* Header */}
+    <>
+      <PageLayout showBackButton={false}>
+
         <div className="p-6 border-b border-gray-200">
           <div className="flex gap-1 flex-col justify-start">
-            <button
-              onClick={handleBackToUsers}
-              className="hover:bg-gray-100 rounded-md p-1 text-gray-500 transition-colors duration-150 self-start"
-            >
-              ← Back to Users
-            </button>
+            <BackButton title="Back to Users" onClick={handleBackToUsers} />
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">{user?.name || "User"}</h1>
               <p className="text-sm text-gray-500 mt-1">
@@ -149,111 +158,31 @@ const UserPosts: React.FC = () => {
 
             {/* Post Cards */}
             {postsArray.map((post: Post) => (
-              <div
+              <PostCard
                 key={post.id}
-                onClick={() => handlePostClick(post)}
-                className="border border-gray-200 rounded-lg p-6 cursor-pointer hover:shadow-md transition-shadow duration-150 min-h-[200px] relative group"
-              >
-                <div className="flex flex-col h-full">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2 mr-4">{post.title}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-4">{post.body}</p>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="text-xs text-gray-400">
-                      {new Date(post.created_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-                  {/* Delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeletePost(post);
-                    }}
-                    disabled={deletePostMutation.isPending}
-                    className="absolute top-4 right-4 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-all duration-150 disabled:opacity-50"
-                    title="Delete post"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+                post={post}
+                onClick={handlePostClick}
+                onDelete={handleDeletePost}
+                isDeleting={deletePostMutation.isPending}
+              />
             ))}
           </div>
         </div>
-      </div>
+      </PageLayout>
 
-      {/* New Post Modal */}
       <NewPostModal userId={userId || ""} onClose={() => setIsModalOpen(false)} isOpen={isModalOpen} />
 
-      {/* Post View Modal */}
-      {selectedPost && (
-        <Modal isOpen={true} onClose={handleClosePostModal} title={selectedPost.title} maxWidth="max-w-2xl">
-          <div className="prose max-w-none">
-            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedPost.body}</p>
-            <div className="mt-6 pt-4 border-t border-gray-200 text-sm text-gray-400">
-              {new Date(selectedPost.created_at).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </div>
-          </div>
-        </Modal>
-      )}
+      <PostViewModal post={selectedPost} isOpen={!!selectedPost} onClose={handleClosePostModal} />
 
-      {/* Delete Confirmation Modal */}
-      {postToDelete && (
-        <Modal isOpen={true} onClose={cancelDeletePost} title="Sure To Delete Post?" maxWidth="max-w-md">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-              <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 15.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-            </div>
-            <p className="text-sm text-gray-500 mb-6">
-              "{postToDelete.title}" will be permanently deleted. This action cannot be undone.
-            </p>
-            <div className="flex space-x-3 justify-center">
-              <button
-                onClick={cancelDeletePost}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeletePost}
-                disabled={deletePostMutation.isPending}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {deletePostMutation.isPending ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
+      <DeletePostModal
+        post={postToDelete}
+        isOpen={!!postToDelete}
+        onClose={cancelDeletePost}
+        onConfirm={confirmDeletePost}
+        isDeleting={deletePostMutation.isPending}
+      />
+    </>
   );
 };
 
-export default UserPosts;
+export default React.memo(UserPosts);

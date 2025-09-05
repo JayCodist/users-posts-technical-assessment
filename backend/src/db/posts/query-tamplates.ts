@@ -2,6 +2,7 @@ export const selectPostsTemplate = `
 SELECT *
 FROM posts
 WHERE user_id = ?
+ORDER BY created_at DESC
 `;
 
 export const deletePostTemplate = `

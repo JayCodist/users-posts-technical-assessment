@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useCreatePost } from "../hooks/useUsers";
 import Modal from "./ui/Modal";
+import Button from "./ui/Button";
 import { useToast } from "../contexts/ToastContext";
 
 interface NewPostModalProps {
@@ -17,7 +18,7 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ userId, onClose, isOpen }) 
 
   const createPostMutation = useCreatePost();
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors: { title?: string; body?: string } = {};
 
     if (!title.trim()) {
@@ -30,9 +31,9 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ userId, onClose, isOpen }) 
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [title, body]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -56,14 +57,14 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ userId, onClose, isOpen }) 
       showError("Failed to create post. Please try again.");
       console.error("Failed to create post:", error);
     }
-  };
+  }, [validateForm, createPostMutation, title, body, userId, showSuccess, showError, onClose]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setTitle("");
     setBody("");
     setErrors({});
     onClose();
-  };
+  }, [onClose]);
 
   return (
     <Modal isOpen={isOpen} onClose={handleCancel} title="New Post" maxWidth="max-w-2xl">
@@ -103,29 +104,22 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ userId, onClose, isOpen }) 
         </div>
 
         <div className="flex justify-end space-x-3">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={handleCancel}
             disabled={createPostMutation.isPending}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={createPostMutation.isPending}
-            className={`px-4 py-2 text-sm font-medium text-white bg-[#334155] border border-transparent rounded-md hover:bg-[#42536b] focus:outline-none focus:ring-2 disabled:opacity-50 flex items-center" ${createPostMutation.isPending ? "opacity-50 cursor-default" : ""}`}
+            variant="primary"
+            loading={createPostMutation.isPending}
+            loadingText="Publishing..."
           >
             Publish
-            {createPostMutation.isPending && (
-              <div className="lds-ellipsis small ml-2">
-                <div />
-                <div />
-                <div />
-                <div />
-              </div>
-            )}
-          </button>
+          </Button>
         </div>
 
         {createPostMutation.isError && (
@@ -140,4 +134,4 @@ const NewPostModal: React.FC<NewPostModalProps> = ({ userId, onClose, isOpen }) 
   );
 };
 
-export default NewPostModal;
+export default React.memo(NewPostModal);

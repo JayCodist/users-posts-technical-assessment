@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import UsersTable from './components/UsersTable'
 import UserPosts from './components/UserPosts'
 import { ToastProvider } from './contexts/ToastContext'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,18 +16,20 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Routes>
-              <Route path="/" element={<UsersTable />} />
-              <Route path="/users/:userId" element={<UserPosts />} />
-            </Routes>
-          </div>
-        </Router>
-      </ToastProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <Router>
+            <div className="min-h-screen bg-gray-50">
+              <Routes>
+                <Route path="/" element={<UsersTable />} />
+                <Route path="/users/:userId" element={<UserPosts />} />
+              </Routes>
+            </div>
+          </Router>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
 

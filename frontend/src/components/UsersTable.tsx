@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useUsersCount } from "../hooks/useUsers";
 import { User } from "../types";
@@ -22,20 +22,20 @@ const UsersTable: React.FC = () => {
   const { data: users, isLoading, error, isError } = useUsers(currentPage, pageSize);
   const { data: totalUsers } = useUsersCount();
 
-  const handleUserClick = (userId: string) => {
+  const handleUserClick = useCallback((userId: string) => {
     navigate(`/users/${userId}`);
-  };
+  }, [navigate]);
 
-  const formatAddress = (address: string): string => {
+  const formatAddress = useCallback((address: string): string => {
     try {
       const addr = JSON.parse(address);
       return `${addr.street}, ${addr.state}, ${addr.city}, ${addr.zipcode}`;
     } catch {
       return address;
     }
-  };
+  }, []);
 
-  const columns: Column<User>[] = [
+  const columns: Column<User>[] = useMemo(() => [
     {
       title: 'Full Name',
       dataIndex: 'name',
@@ -57,13 +57,13 @@ const UsersTable: React.FC = () => {
         </div>
       ),
     },
-  ];
+  ], [formatAddress]);
 
-  const handleRowClick = (row: User) => {
+  const handleRowClick = useCallback((row: User) => {
     handleUserClick(row.id);
-  };
+  }, [handleUserClick]);
 
-  const handlePageChange = (pageNumber: number) => {
+  const handlePageChange = useCallback((pageNumber: number) => {
     // Update URL search params with new page number (1-based indexing for URL)
     setSearchParams(prev => {
       const newParams = new URLSearchParams(prev);
@@ -75,7 +75,13 @@ const UsersTable: React.FC = () => {
       }
       return newParams;
     });
-  };
+  }, [setSearchParams]);
+
+  const tablePagination = useMemo(() => ({
+    pageSize,
+    total: totalUsers?.count || 0,
+    pageNumber: currentPageFromUrl, // Already 1-based from URL
+  }), [pageSize, totalUsers?.count, currentPageFromUrl]);
 
   if (isError) {
     return (
@@ -95,12 +101,6 @@ const UsersTable: React.FC = () => {
     );
   }
 
-  const tablePagination = {
-    pageSize,
-    total: totalUsers?.count || 0,
-    pageNumber: currentPageFromUrl, // Already 1-based from URL
-  };
-
   return (
     <div className="lg:px-32 lg:py-20 py-6 px-4">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Users</h1>
@@ -118,4 +118,4 @@ const UsersTable: React.FC = () => {
   );
 };
 
-export default UsersTable;
+export default React.memo(UsersTable);
