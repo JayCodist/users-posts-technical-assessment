@@ -4,6 +4,14 @@ export interface User {
   username: string;
   email: string;
   phone: string;
+  address: string;
+}
+
+export interface UserAddress {
+  street: string;
+  state: string;
+  city: string;
+  zipcode: string;
 }
 
 export type Pagination = {
