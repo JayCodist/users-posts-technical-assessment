@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useUsers, useUsersCount } from "../hooks/useUsers";
 import { User } from "../types";
-import LoadingSpinner from "./ui/LoadingSpinner";
 import ErrorMessage from "./ui/ErrorMessage";
 import Table, { Column } from "./table/Table";
 
@@ -78,21 +77,6 @@ const UsersTable: React.FC = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
-          </div>
-          <div className="p-6">
-            <LoadingSpinner />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (isError) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -143,7 +127,7 @@ const UsersTable: React.FC = () => {
           onPageChange={handlePageChange}
           onRowClick={handleRowClick}
           emptyText="No users found."
-          loading={false}
+          loading={isLoading}
         />
     </div>
   );
