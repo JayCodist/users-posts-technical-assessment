@@ -133,7 +133,7 @@ const Table = <T = unknown,>(props: TableProps<T>): ReactNode => {
 
       {pagination && (
         <div className={`flex items-center justify-end px-6 py-4 ${loading ? "pointer-events-none" : ""}`}>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-1 flex-wrap lg:flex-nowrap">
             <button
               onClick={() => handlePageControlClick(pageNumber - 1)}
               disabled={pageNumber === 1}

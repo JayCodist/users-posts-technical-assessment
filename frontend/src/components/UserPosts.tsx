@@ -111,7 +111,7 @@ const UserPosts: React.FC = () => {
   const postsArray = posts || [];
 
   return (
-    <div className="container mx-auto px-32 py-8">
+    <div className="container mx-auto lg:px-32 px-4 py-8">
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
@@ -156,7 +156,7 @@ const UserPosts: React.FC = () => {
               >
                 <div className="flex flex-col h-full">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">{post.title}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2 mr-4">{post.title}</h3>
                     <p className="text-gray-600 text-sm leading-relaxed line-clamp-4">{post.body}</p>
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-100">

@@ -102,7 +102,7 @@ const UsersTable: React.FC = () => {
   };
 
   return (
-    <div className="px-32 py-20">
+    <div className="lg:px-32 lg:py-20 py-6 px-4">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Users</h1>
       
         <Table<User>
