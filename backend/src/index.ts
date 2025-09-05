@@ -2,7 +2,7 @@ import express, { Application } from "express";
 import config from "config";
 import postsRouter from "./routes/posts";
 import usersRouter from "./routes/users";
-const port = config.get("port") as number;
+const port = process.env.PORT || config.get("port") as number;
 
 const app: Application = express();
 
