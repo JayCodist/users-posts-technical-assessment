@@ -95,21 +95,6 @@ const UsersTable: React.FC = () => {
     );
   }
 
-  if (!users || !users.length) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
-          </div>
-          <div className="p-6">
-            <p className="text-gray-500 text-center">No users found.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const tablePagination = {
     pageSize,
     total: totalUsers?.count || 0,
@@ -121,7 +106,7 @@ const UsersTable: React.FC = () => {
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Users</h1>
       
         <Table<User>
-          dataSource={users}
+          dataSource={users || []}
           columns={columns}
           pagination={tablePagination}
           onPageChange={handlePageChange}
